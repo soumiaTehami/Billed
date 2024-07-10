@@ -20,7 +20,19 @@ const row = (bill) => {
   }
 
 const rows = (data) => {
-  return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
+   // Tri des notes de frais par date en ordre décroissant
+   //data?.sort((a, b) => new Date(b.date) - new Date(a.date))
+
+
+   
+  //return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
+  return (data && data.length) ? data
+  .sort((a,b)=> {
+    let date1 = a.date !== null ? a.date : '1970-01-01';
+    let date2 = b.date !== null ? b.date : '1970-01-01';
+     return (date1 < date2) ? 1 : -1
+  })
+  .map(bill => row(bill)).join("") : ""
 }
 
 export default ({ data: bills, loading, error }) => {
