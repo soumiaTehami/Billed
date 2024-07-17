@@ -72,7 +72,6 @@ export default class {
     this.document = document
     this.onNavigate = onNavigate
     this.store = store
-    this.openedSections = new Set()
     $('#arrow-icon1').click((e) => this.handleShowTickets(e, bills, 1))
     $('#arrow-icon2').click((e) => this.handleShowTickets(e, bills, 2))
     $('#arrow-icon3').click((e) => this.handleShowTickets(e, bills, 3))
@@ -96,7 +95,7 @@ export default class {
       $(`#open-bill${bill.id}`).css({ background: '#2A2B35' })
       $('.dashboard-right-container div').html(DashboardFormUI(bill))
       $('.vertical-navbar').css({ height: '150vh' })
-      this.counter++
+      this.counter ++
     } else {
       $(`#open-bill${bill.id}`).css({ background: '#0D5AE5' })
 
@@ -104,7 +103,7 @@ export default class {
         <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
       `)
       $('.vertical-navbar').css({ height: '120vh' })
-      this.counter++
+      this.counter ++
     }
     $('#icon-eye-d').click(this.handleClickIconEye)
     $('#btn-accept-bill').click((e) => this.handleAcceptSubmit(e, bill))
@@ -132,15 +131,18 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
-    if (this.openedSections.has(index)) {
-      this.openedSections.delete(index)
-      $(`#arrow-icon${index}`).css({ transform: 'rotate(90deg)' })
-      $(`#status-bills-container${index}`).html("")
+    if (this.counter === undefined || this.index !== index) this.counter = 0
+    if (this.index === undefined || this.index !== index) this.index = index
+    if (this.counter % 2 === 0) {
+      $(`#arrow-icon${this.index}`).css({ transform: 'rotate(0deg)'})
+      $(`#status-bills-container${this.index}`)
+        .html(cards(filteredBills(bills, getStatus(this.index))))
+      this.counter ++
     } else {
-      this.openedSections.add(index)
-      $(`#arrow-icon${index}`).css({ transform: 'rotate(0deg)' })
-      $(`#status-bills-container${index}`)
-        .html(cards(filteredBills(bills, getStatus(index))))
+      $(`#arrow-icon${this.index}`).css({ transform: 'rotate(90deg)'})
+      $(`#status-bills-container${this.index}`)
+        .html("")
+      this.counter ++
     }
 
     bills.forEach(bill => {
@@ -148,26 +150,27 @@ export default class {
     })
 
     return bills
+
   }
 
   getBillsAllUsers = () => {
     if (this.store) {
       return this.store
-        .bills()
-        .list()
-        .then(snapshot => {
-          const bills = snapshot
-            .map(doc => ({
-              id: doc.id,
-              ...doc,
-              date: doc.date,
-              status: doc.status
-            }))
-          return bills
-        })
-        .catch(error => {
-          throw error
-        })
+      .bills()
+      .list()
+      .then(snapshot => {
+        const bills = snapshot
+        .map(doc => ({
+          id: doc.id,
+          ...doc,
+          date: doc.date,
+          status: doc.status
+        }))
+        return bills
+      })
+      .catch(error => {
+        throw error;
+      })
     }
   }
 
@@ -175,11 +178,11 @@ export default class {
   /* istanbul ignore next */
   updateBill = (bill) => {
     if (this.store) {
-      return this.store
-        .bills()
-        .update({ data: JSON.stringify(bill), selector: bill.id })
-        .then(bill => bill)
-        .catch(console.log)
+    return this.store
+      .bills()
+      .update({data: JSON.stringify(bill), selector: bill.id})
+      .then(bill => bill)
+      .catch(console.log)
     }
   }
 }
