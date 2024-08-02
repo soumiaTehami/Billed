@@ -78,6 +78,8 @@ $jest src/__tests__/your_test_file.js
 
 `http://127.0.0.1:8080/coverage/lcov-report/`
 
+
+
 ## Comptes et utilisateurs :
 
 Vous pouvez vous connecter en utilisant les comptes:
