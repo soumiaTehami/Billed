@@ -3,7 +3,7 @@
  */
 import "@testing-library/jest-dom";
 import { fireEvent, screen, waitFor } from "@testing-library/dom";
-import LoginUI from "../views/LoginUI.js";
+//import LoginUI from "../views/LoginUI.js";
 import BillsUI from "../views/BillsUI.js";
 import { bills } from "../fixtures/bills.js";
 import { ROUTES_PATH } from "../constants/routes.js";
