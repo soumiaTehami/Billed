@@ -16,7 +16,7 @@ export default class NewBill {
     new Logout({ document, localStorage, onNavigate })
   }
 
-  handleChangeFile = e => {
+ /* handleChangeFile = e => {
     e.preventDefault()
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
     const filePath = e.target.value.split(/\\/g)
@@ -49,7 +49,47 @@ export default class NewBill {
         this.fileUrl = fileUrl
         this.fileName = fileName
       }).catch(error => console.error(error))
-  }
+  }*/
+      handleChangeFile = (e) => {
+        e.preventDefault();
+        const file = this.document.querySelector(`input[data-testid="file"]`)
+          .files[0];
+        const validFormat = ["image/jpeg", "image/jpg", "image/png"];
+        let fileFormatIsOk = validFormat.includes(file.type);
+        let errorTypeFile = this.document.querySelector(".error-type-file");
+        let btn = this.document.getElementById("btn-send-bill");
+    
+        if (fileFormatIsOk) {
+          const filePath = e.target.value.split(/\\/g);
+          const fileName = filePath[filePath.length - 1];
+          const formData = new FormData();
+          const email = JSON.parse(localStorage.getItem("user")).email;
+          formData.append("file", file);
+          formData.append("email", email);
+    
+          this.store
+            .bills()
+            .create({
+              data: formData,
+              headers: {
+                noContentType: true,
+              },
+            })
+            .then(({ fileUrl, key }) => {
+              this.billId = key;
+              this.fileUrl = fileUrl;
+              this.fileName = fileName;
+            })
+            .catch((error) => console.error(error));
+          btn.type = "submit";
+        } else {
+          errorTypeFile.textContent =
+            "le type de fichier non  valide (jpeg, jpg, png)";
+          btn.type = "button";
+        }
+      };
+    
+    
 
   handleSubmit = e => {
     e.preventDefault()

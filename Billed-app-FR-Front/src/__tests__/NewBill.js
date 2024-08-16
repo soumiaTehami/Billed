@@ -117,7 +117,7 @@ describe("Employee Connected", () => {
     });
   });
 
-  describe("API POST", () => {
+ describe("API POST", () => {
     test("Soumission d'une nouvelle note de frais via l'API mockée", async () => {
       const postSpy = jest.spyOn(mockStore, "bills");
 
