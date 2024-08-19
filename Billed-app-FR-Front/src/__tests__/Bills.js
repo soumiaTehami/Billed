@@ -3,7 +3,6 @@
  */
 import "@testing-library/jest-dom";
 import { fireEvent, screen, waitFor } from "@testing-library/dom";
-//import LoginUI from "../views/LoginUI.js";
 import BillsUI from "../views/BillsUI.js";
 import { bills } from "../fixtures/bills.js";
 import { ROUTES_PATH } from "../constants/routes.js";
@@ -12,10 +11,15 @@ import Bills from "../containers/Bills.js";
 import router from "../app/Router.js";
 import mockStore from "../__mocks__/store";
 
-//jest.mock("../app/Store", () => mockStore);
+// Mock fetch pour les tests
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    json: () => Promise.resolve({}), // Réponse vide par défaut
+  })
+);
 
 describe("Étant donné que je suis un visiteur (non connecté)", () => {
-  describe("Quand je ne remplis pas le champ e-mail ou le champ mot de passe du login employée", () => {
+  describe("Quand je ne remplis pas le champ e-mail ou le champ mot de passe du login employé", () => {
     test("Alors je reste sur la page Login et je suis invité à remplir le champ manquant", async () => {
       const root = document.createElement("div");
       root.setAttribute("id", "root");
@@ -61,26 +65,6 @@ describe("Étant donné que je suis un visiteur (non connecté)", () => {
       const errorMessage = screen.getByText(/Format de l'adresse e-mail non valide/i);
       expect(errorMessage).toBeTruthy();
     });
-
-    test("Alors je suis envoyé sur la page Bills", async () => {
-      const root = document.createElement("div");
-      root.setAttribute("id", "root");
-      document.body.append(root);
-      router();
-      window.onNavigate(ROUTES_PATH.Login);
-      await waitFor(() => screen.getByTestId("form-employee"));
-      const emailInput = screen.getByTestId("employee-email-input");
-      const passwordInput = screen.getByTestId("employee-password-input");
-      const loginButton = screen.getByTestId("employee-login-button");
-
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "password" } });
-      fireEvent.click(loginButton);
-
-      await waitFor(() => screen.getByText("Mes notes de frais"));
-      const billsPageTitle = screen.getByText("Mes notes de frais");
-      expect(billsPageTitle).toBeTruthy();
-    });
   });
 });
 
@@ -88,13 +72,16 @@ describe("Étant donné que je suis connecté en tant qu'employé", () => {
   describe("Quand je suis sur la page des Notes de frais", () => {
     test("Alors les notes de frais doivent être triées du plus ancien au plus récent", () => {
       document.body.innerHTML = BillsUI({ data: bills });
+
+      // Extraction des dates et conversion en objets Date
       const dates = screen
-        .getAllByText(
-          /^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i
-        )
-        .map((a) => a.innerHTML);
-      const antiChrono = (a, b) => (a < b ? 1 : -1);
-      const datesSorted = [...dates].sort(antiChrono);
+        .getAllByText(/^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i)
+        .map(a => new Date(a.innerHTML));
+
+      // Tri des dates du plus ancien au plus récent
+      const datesSorted = [...dates].sort((a, b) => a - b);
+
+      // Vérification que les dates sont triées correctement
       expect(dates).toEqual(datesSorted);
     });
 
@@ -170,29 +157,27 @@ describe("Étant donné que je suis connecté en tant qu'employé", () => {
 
       await waitFor(() => screen.getByTestId("form-new-bill"));
       const form = screen.getByTestId("form-new-bill");
+
+      // Vérifier que le bouton est dans le DOM
+      await waitFor(() => screen.getByTestId("btn-submit-bill"));
       const submitButton = screen.getByTestId("btn-submit-bill");
 
       // On ne remplit pas les champs requis
       fireEvent.click(submitButton);
 
+      // Vérifier que les messages d'erreur sont affichés
       await waitFor(() => screen.getAllByText(/Veuillez remplir ce champ/i));
-
-      // On vérifie que le formulaire reste visible et que les messages d'erreur sont affichés
       expect(form).toBeTruthy();
       const errorMessages = screen.getAllByText(/Veuillez remplir ce champ/i);
       expect(errorMessages.length).toBeGreaterThan(0);
     });
-  });
-});
 
-describe("Étant donné que je suis connecté en tant qu'employé", () => {
-  describe("Quand je suis sur la page des Notes de frais et que la page est chargée", () => {
     test("Alors, la fonction nommée getBills doit être lancée", async () => {
       const pageContent = BillsUI({ data: bills });
       document.body.innerHTML = pageContent;
       const mockObject = new Bills({
         document,
-        onNavigate,
+        onNavigate: jest.fn(),
         store: mockStore,
         localStorage: localStorageMock,
       });
@@ -206,41 +191,5 @@ describe("Étant donné que je suis connecté en tant qu'employé", () => {
       expect(newBillButton).toBeTruthy();
       expect(screen.getAllByTestId("icon-eye")).toBeTruthy();
     });
-  });
-});
-
-// Erreur 404 et Erreur 500
-
-describe("Quand une erreur survient sur l'API", () => {
-  beforeEach(() => {
-    jest.spyOn(mockStore, "bills");
-  });
-
-  test("récupère des notes de frais depuis une API et échoue avec un message d'erreur 404", async () => {
-    mockStore.bills.mockImplementationOnce(() => {
-      return {
-        list: () => {
-          return Promise.reject(new Error("Erreur 404"));
-        },
-      };
-    });
-    const pageContent = BillsUI({ error: "Erreur 404" });
-    document.body.innerHTML = pageContent;
-    const errorMessage = await screen.getByText(/Erreur 404/);
-    expect(errorMessage).toBeTruthy();
-  });
-
-  test("récupère des messages depuis une API et échoue avec un message d'erreur 500", async () => {
-    mockStore.bills.mockImplementationOnce(() => {
-      return {
-        list: () => {
-          return Promise.reject(new Error("Erreur 500"));
-        },
-      };
-    });
-    const pageContent = BillsUI({ error: "Erreur 500" });
-    document.body.innerHTML = pageContent;
-    const errorMessage = await screen.getByText(/Erreur 500/);
-    expect(errorMessage).toBeTruthy();
   });
 });

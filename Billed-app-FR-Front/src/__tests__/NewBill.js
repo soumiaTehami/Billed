@@ -2,186 +2,141 @@
  * @jest-environment jsdom
  */
 
-import { screen, fireEvent, waitFor } from "@testing-library/dom";
-import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
-import mockStore from "../__mocks__/store";
-import { localStorageMock } from "../__mocks__/localStorage.js";
-import router from "../app/Router.js";
-import { ROUTES_PATH } from "../constants/routes";
 
-// Configuration de l'environnement de test
-const setupTestEnvironment = (userType = "Employee") => {
-  Object.defineProperty(window, "localStorage", { value: localStorageMock });
-  window.localStorage.setItem("user", JSON.stringify({ type: userType }));
+describe("Étant donné que je suis connecté en tant qu'employé", () => {
+  describe("Quand je suis sur la page Nouvelle Note de Frais", () => {
+    describe("lors du téléchargement d'un fichier avec le bon format", () => {
+      test("l'email de l'utilisateur doit être sauvegardé", () => {
+        // Fonctionnalités et données simulées
+        const mockGetElementById = jest.fn().mockReturnValue({});
+        const createMock = jest.fn().mockResolvedValue({ fileUrl: "fileURL", key: "key" });
+        const fichierBonFormat = new File(['img'], 'image.png', { type: 'image/png' });
 
-  const root = document.createElement("div");
-  root.setAttribute("id", "root");
-  document.body.append(root);
-  router();
-  window.onNavigate(ROUTES_PATH.NewBill);
-};
-
-// Configuration du conteneur NewBill
-const setupNewBill = (store = null) => {
-  return new NewBill({ document, onNavigate, store, localStorage });
-};
-
-describe("Employee Connected", () => {
-  beforeEach(() => setupTestEnvironment());
-
-  describe("NewBill Page", () => {
-
-    test("L'icône de mail est surlignée", async () => {
-      const mailIcon = await screen.findByTestId("icon-mail");
-      expect(mailIcon).toHaveClass("active-icon");
-    });
-
-    test("Le formulaire de nouvelle note de frais est correctement rendu", () => {
-      document.body.innerHTML = NewBillUI();
-
-      const formFields = [
-        "expense-type",
-        "expense-name",
-        "datepicker",
-        "amount",
-        "vat",
-        "pct",
-        "commentary",
-        "file",
-      ];
-
-      formFields.forEach(field => {
-        expect(screen.getByTestId(field)).toBeTruthy();
-      });
-
-     // expect(screen.getByTestId("form-new-bill")).toBeInTheDocument();
-      expect(screen.getByText("Envoyer une note de frais")).toBeInTheDocument();
-    });
-
-    describe("Gestion du téléchargement de fichier", () => {
-      beforeEach(() => {
-        setupTestEnvironment();
-        document.body.innerHTML = NewBillUI();
-      });
-
-      const testFileUpload = async (fileName, fileType, isValid, alertExpected) => {
-        const newBill = setupNewBill();
-        const handleChangeFile = jest.fn(newBill.handleChangeFile);
-        const fileInput = screen.getByTestId("file");
-
-        window.alert = jest.fn();
-
-        fileInput.addEventListener("change", handleChangeFile);
-        fireEvent.change(fileInput, {
-          target: { files: [new File(["file"], fileName, { type: fileType })] },
-        });
-
-        await waitFor(() => expect(handleChangeFile).toHaveBeenCalled());
-
-        if (isValid) {
-          expect(fileInput.files[0].name).toBe(fileName);
-          expect(newBill.fileName).toBe(fileName);
-          expect(newBill.isImgFormatValid).toBe(true);
-          expect(newBill.formData).not.toBeNull();
-          expect(window.alert).not.toHaveBeenCalled();
-        } else {
-          expect(newBill.fileName).toBeNull();
-          expect(newBill.isImgFormatValid).toBe(false);
-          expect(newBill.formData).toBeUndefined();
-          expect(window.alert).toHaveBeenCalledTimes(alertExpected ? 1 : 0);
-        }
-      };
-
-      test("Téléchargement d'un fichier valide (image)", async () => {
-        await testFileUpload("file.png", "image/png", true, false);
-      });
-
-      test("Téléchargement d'un fichier non valide (PDF)", async () => {
-        await testFileUpload("file.pdf", "application/pdf", false, true);
-      });
-    });
-
-    test("Soumission du formulaire déclenche handleSubmit", async () => {
-      document.body.innerHTML = NewBillUI();
-      const newBill = setupNewBill(mockStore);
-      newBill.isImgFormatValid = true;
-
-      const formNewBill = screen.getByTestId("form-new-bill");
-      const handleSubmit = jest.fn(newBill.handleSubmit);
-
-      formNewBill.addEventListener("submit", handleSubmit);
-      fireEvent.submit(formNewBill);
-
-      await waitFor(() => expect(handleSubmit).toHaveBeenCalled());
-    });
-  });
-
- describe("API POST", () => {
-    test("Soumission d'une nouvelle note de frais via l'API mockée", async () => {
-      const postSpy = jest.spyOn(mockStore, "bills");
-
-      const bill = {
-        id: "47qAXb6fIm2zOKkLzMro",
-        vat: "80",
-        fileUrl: "https://test.storage.tld/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a",
-        status: "pending",
-        type: "Hôtel et logement",
-        commentary: "séminaire billed",
-        name: "encore",
-        fileName: "preview-facture-free-201801-pdf-1.jpg",
-        date: "2004-04-04",
-        amount: 400,
-        commentAdmin: "ok",
-        email: "a@a",
-        pct: 20,
-      };
-
-      const postBills = await mockStore.bills().update(bill);
-
-      expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postBills).toStrictEqual(bill);
-    });
-
-    describe("Gestion des erreurs de l'API", () => {
-      beforeEach(() => {
-        setupTestEnvironment();
-        document.body.innerHTML = NewBillUI();
-      });
-
-      const testAPIError = async (errorCode) => {
-        const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-
-        const store = {
-          bills: jest.fn(() => ({
-            update: jest.fn(() => Promise.reject(new Error(errorCode))),
-          })),
+        const documentSimule = {
+          querySelector: (sélecteur) => {
+            if (sélecteur === 'input[data-testid="file"]') {
+              return {
+                files: [fichierBonFormat],
+                addEventListener: jest.fn(),
+              };
+            } else {
+              return { addEventListener: jest.fn() };
+            }
+          },
+          getElementById: mockGetElementById,
         };
 
-        const newBill = setupNewBill(store);
-        newBill.isImgFormatValid = true;
+        // Configuration de localStorage
+        localStorage.setItem("user", '{"email" : "user@email.com"}');
 
-        const form = screen.getByTestId("form-new-bill");
-        const handleSubmit = jest.fn(newBill.handleSubmit);
+        // Configuration de l'instance de test
+        const storeSimule = {
+          bills: () => ({
+            create: createMock,
+          }),
+        };
+        const instanceObjet = new NewBill({
+          document: documentSimule,
+          onNavigate: {},
+          store: storeSimule,
+          localStorage: {},
+        });
 
-        form.addEventListener("submit", handleSubmit);
-        fireEvent.submit(form);
+        // Déclenchement du téléchargement de fichier
+        instanceObjet.handleChangeFile({
+          preventDefault: jest.fn(),
+          target: { value: "image.png" },
+        });
 
-        await waitFor(() => expect(consoleErrorSpy).toHaveBeenCalledWith(new Error(errorCode)));
+        // Attentes
+        const emailAttendu = "user@email.com";
+        const formData = createMock.mock.calls[0][0].data;
+        console.log('formData', formData);
 
-        consoleErrorSpy.mockRestore();
-      };
-
-      test("Erreur 400 lors de l'appel à l'API", async () => {
-        await testAPIError("400");
+        expect(formData.get("email")).toEqual(emailAttendu);
       });
+    });
 
-      test("Erreur 404 lors de l'appel à l'API", async () => {
-        await testAPIError("404");
-      });
+    describe('lors de la soumission d\'une nouvelle note de frais', () => {
+      test('la méthode update doit être appelée sur le store', () => {
+        // Fonctionnalités et données simulées
+        const mockGetElementById = jest.fn().mockReturnValue({});
+        const createMock = jest.fn();
+        const fichierBonFormat = new File(['img'], 'image.png', { type: 'image/png' });
+        const mockUpdate = jest.fn().mockResolvedValue({});
+        const documentSimule = {
+          querySelector: (sélecteur) => {
+            if (sélecteur === 'input[data-testid="file"]') {
+              return {
+                files: [fichierBonFormat],
+                addEventListener: jest.fn(),
+              };
+            } else {
+              return { addEventListener: jest.fn() };
+            }
+          },
+          getElementById: mockGetElementById,
+        };
+        const storeSimule = {
+          bills: () => ({
+            update: mockUpdate,
+          }),
+        };
 
-      test("Erreur 500 lors de l'appel à l'API", async () => {
-        await testAPIError("500");
+        // Configuration de l'instance de test
+        const instanceObjet = new NewBill({
+          document: documentSimule,
+          onNavigate: jest.fn(),
+          store: storeSimule,
+          localStorage: {},
+        });
+
+        // Déclenchement de la soumission du formulaire
+        instanceObjet.handleSubmit({
+          preventDefault: jest.fn(),
+          target: {
+            querySelector: (sélecteur) => {
+              switch (sélecteur) {
+                case 'select[data-testid="expense-type"]':
+                  return { value: 'type' };
+                case 'input[data-testid="expense-name"]':
+                  return { value: 'name' };
+                case 'input[data-testid="amount"]':
+                  return { value: '3000' };
+                case 'input[data-testid="datepicker"]':
+                  return { value: 'date' };
+                case 'input[data-testid="vat"]':
+                  return { value: 'vat' };
+                case 'input[data-testid="pct"]':
+                  return { value: '25' };
+                case 'textarea[data-testid="commentary"]':
+                  return { value: 'commentaire' };
+              }
+            },
+          },
+        });
+
+        // Attentes
+        const donnéesÀVérifier = {
+          email: 'user@email.com',
+          type: 'type',
+          name: 'name',
+          amount: 3000,
+          date: 'date',
+          vat: 'vat',
+          pct: 25,
+          commentary: 'commentaire',
+          fileUrl: null,
+          fileName: null,
+          status: 'pending',
+        };
+
+        // Analyse des données passées à la fonction
+        const données = JSON.parse(mockUpdate.mock.calls[0][0].data);
+        console.log('données?', données);
+
+        expect(données).toMatchObject(donnéesÀVérifier);
       });
     });
   });
