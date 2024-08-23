@@ -21,7 +21,7 @@ export default () => {
                   <label for="inputEmail">Votre email</label>
                   <input type="email" data-testid="employee-email-input" class="form-control" placeholder="johndoe@email.com" required autofocus>
                   <label for="inputPassword">Mot de passe</label>
-                  <input type="password" data-testid="employee-password-input" class="form-control" placeholder="******" required>
+                  <input type="password" data-testid="employee-password-input" data-testid="toggle-password-visibility" class="form-control" placeholder="******" required>
                   <button class="btn btn-lg btn-primary btn-block"  data-testid="employee-login-button" style="background-color: #0E5AE5;" type="submit">Se connecter</button>
                 </form>
               </div>
