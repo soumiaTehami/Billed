@@ -12,7 +12,12 @@ import Bills from "../containers/Bills.js";
 import router from "../app/Router.js";
 import mockStore from "../__mocks__/store";
 
-//jest.mock("../app/Store", () => mockStore);
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    json: () => Promise.resolve([]),
+  })
+);
+
 
 Object.defineProperty(window, "localStorage", { value: localStorageMock });
 window.localStorage.setItem("user", JSON.stringify({ type: "Employee" }));

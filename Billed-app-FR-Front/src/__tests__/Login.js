@@ -132,8 +132,8 @@ describe("Given that I am a user on the login page", () => {
 
         const form = screen.getByTestId("form-admin");
         fireEvent.submit(form);
-        expect(screen.getByText("Email is required")).toBeTruthy();
-        expect(screen.getByText("Password is required")).toBeTruthy();
+       expect(screen.getByText("Email is required")).toBeTruthy();
+       expect(screen.getByText("Password is required")).toBeTruthy();
       });
     });
 
