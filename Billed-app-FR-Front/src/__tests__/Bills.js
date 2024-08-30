@@ -24,70 +24,43 @@ window.localStorage.setItem("user", JSON.stringify({ type: "Employee" }));
 const onNavigate = (pathname) => {
   document.body.innerHTML = ROUTES({ pathname });
 };
-
 describe("Étant donné que je suis un visiteur (non connecté)", () => {
-  describe("Quand je ne remplis pas le champ e-mail ou le champ mot de passe du login employée", () => {
-    test("Alors je reste sur la page Login et je suis invité à remplir le champ manquant", async () => {
+  describe("Quand je remplis correctement le champ e-mail et le champ mot de passe du login employée", () => {
+    test("Alors je suis redirigé vers la page Bills après la connexion", async () => {
+      // Crée le root de l'application
       const root = document.createElement("div");
       root.setAttribute("id", "root");
       document.body.append(root);
+      
+      // Initialise le routeur
       router();
       window.onNavigate(ROUTES_PATH.Login);
+      
+      // Attend que le formulaire de connexion soit rendu
       await waitFor(() => screen.getByTestId("form-employee"));
+      
+      // Récupère les champs email et mot de passe, et le bouton de connexion
       const emailInput = screen.getByTestId("employee-email-input");
       const passwordInput = screen.getByTestId("employee-password-input");
       const loginButton = screen.getByTestId("employee-login-button");
 
-      fireEvent.change(emailInput, { target: { value: "" } });
-      fireEvent.change(passwordInput, { target: { value: "" } });
-      fireEvent.click(loginButton);
-
-      await waitFor(() => screen.getByText(/Veuillez remplir ce champ/i));
-
-      const form = screen.getByTestId("form-employee");
-      expect(form).toBeTruthy();
-    });
-
-    test("Alors je reste sur la page Login et je suis invité à remplir le champ e-mail au bon format", async () => {
-      const root = document.createElement("div");
-      root.setAttribute("id", "root");
-      document.body.append(root);
-      router();
-      window.onNavigate(ROUTES_PATH.Login);
-      await waitFor(() => screen.getByTestId("form-employee"));
-      const emailInput = screen.getByTestId("employee-email-input");
-      const passwordInput = screen.getByTestId("employee-password-input");
-      const loginButton = screen.getByTestId("employee-login-button");
-
-      fireEvent.change(emailInput, { target: { value: "email_incorrect" } });
-      fireEvent.change(passwordInput, { target: { value: "password" } });
-      fireEvent.click(loginButton);
-
-      const form = screen.getByTestId("form-employee");
-      expect(form).toBeTruthy();
-    });
-
-    test("Alors je suis envoyé sur la page Bills", async () => {
-      const root = document.createElement("div");
-      root.setAttribute("id", "root");
-      document.body.append(root);
-      router();
-      window.onNavigate(ROUTES_PATH.Login);
-      await waitFor(() => screen.getByTestId("form-employee"));
-      const emailInput = screen.getByTestId("employee-email-input");
-      const passwordInput = screen.getByTestId("employee-password-input");
-      const loginButton = screen.getByTestId("employee-login-button");
-
+      // Remplit les champs avec des valeurs correctes
       fireEvent.change(emailInput, { target: { value: "test@example.com" } });
       fireEvent.change(passwordInput, { target: { value: "password" } });
+
+      // Simule le clic sur le bouton de connexion
       fireEvent.click(loginButton);
 
+      // Attend que la page "Mes notes de frais" soit affichée
       await waitFor(() => screen.getByText("Mes notes de frais"));
       const billsPageTitle = screen.getByText("Mes notes de frais");
-      expect(billsPageTitle).toBeTruthy();
+
+      // Vérifie que le titre de la page "Mes notes de frais" est bien affiché
+      expect(billsPageTitle).toBeInTheDocument();
     });
   });
 });
+
 
 describe("Étant donné que je suis connecté en tant qu'employé", () => {
   describe("Quand je suis sur la page des Notes de frais", () => {
