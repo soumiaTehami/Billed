@@ -1,4 +1,3 @@
-
 /**
  * @jest-environment jsdom
  */
@@ -8,9 +7,9 @@ import Login from "../containers/Login.js";
 import { ROUTES } from "../constants/routes";
 import { fireEvent, screen } from "@testing-library/dom";
 
-describe("Given that I am a user on login page", () => {
-  describe("When I do not fill fields and I click on employee button Login In", () => {
-    test("Then It should renders Login page", () => {
+describe("Étant donné que je suis un utilisateur sur la page de connexion", () => {
+  describe("Quand je ne remplis pas les champs et que je clique sur le bouton de connexion Employé", () => {
+    test("Alors la page de connexion doit se recharger", () => {
       document.body.innerHTML = LoginUI();
 
       const inputEmailUser = screen.getByTestId("employee-email-input");
@@ -28,8 +27,8 @@ describe("Given that I am a user on login page", () => {
     });
   });
 
-  describe("When I do fill fields in incorrect format and I click on employee button Login In", () => {
-    test("Then It should renders Login page", () => {
+  describe("Quand je remplis les champs avec un format incorrect et que je clique sur le bouton de connexion Employé", () => {
+    test("Alors la page de connexion doit se recharger", () => {
       document.body.innerHTML = LoginUI();
 
       const inputEmailUser = screen.getByTestId("employee-email-input");
@@ -49,8 +48,8 @@ describe("Given that I am a user on login page", () => {
     });
   });
 
-  describe("When I do fill fields in correct format and I click on employee button Login In", () => {
-    test("Then I should be identified as an Employee in app", () => {
+  describe("Quand je remplis les champs avec un format correct et que je clique sur le bouton de connexion Employé", () => {
+    test("Alors je devrais être identifié en tant qu'Employé dans l'application", () => {
       document.body.innerHTML = LoginUI();
       const inputData = {
         email: "johndoe@email.com",
@@ -69,7 +68,7 @@ describe("Given that I am a user on login page", () => {
 
       const form = screen.getByTestId("form-employee");
 
-      // localStorage should be populated with form data
+      // Le localStorage devrait être rempli avec les données du formulaire
       Object.defineProperty(window, "localStorage", {
         value: {
           getItem: jest.fn(() => null),
@@ -78,7 +77,7 @@ describe("Given that I am a user on login page", () => {
         writable: true,
       });
 
-      // we have to mock navigation to test it
+      // On doit mocker la navigation pour pouvoir la tester
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
       };
@@ -112,15 +111,15 @@ describe("Given that I am a user on login page", () => {
       );
     });
 
-    test("It should renders Bills page", () => {
+    test("Alors la page des notes de frais doit être rendue", () => {
       expect(screen.getAllByText("Mes notes de frais")).toBeTruthy();
     });
   });
 });
 
-describe("Given that I am a user on login page", () => {
-  describe("When I do not fill fields and I click on admin button Login In", () => {
-    test("Then It should renders Login page", () => {
+describe("Étant donné que je suis un utilisateur sur la page de connexion", () => {
+  describe("Quand je ne remplis pas les champs et que je clique sur le bouton de connexion Admin", () => {
+    test("Alors la page de connexion doit se recharger", () => {
       document.body.innerHTML = LoginUI();
 
       const inputEmailUser = screen.getByTestId("admin-email-input");
@@ -138,8 +137,8 @@ describe("Given that I am a user on login page", () => {
     });
   });
 
-  describe("When I do fill fields in incorrect format and I click on admin button Login In", () => {
-    test("Then it should renders Login page", () => {
+  describe("Quand je remplis les champs avec un format incorrect et que je clique sur le bouton de connexion Admin", () => {
+    test("Alors la page de connexion doit se recharger", () => {
       document.body.innerHTML = LoginUI();
 
       const inputEmailUser = screen.getByTestId("admin-email-input");
@@ -159,8 +158,8 @@ describe("Given that I am a user on login page", () => {
     });
   });
 
-  describe("When I do fill fields in correct format and I click on admin button Login In", () => {
-    test("Then I should be identified as an HR admin in app", () => {
+  describe("Quand je remplis les champs avec un format correct et que je clique sur le bouton de connexion Admin", () => {
+    test("Alors je devrais être identifié en tant qu'Administrateur RH dans l'application", () => {
       document.body.innerHTML = LoginUI();
       const inputData = {
         type: "Admin",
@@ -181,7 +180,7 @@ describe("Given that I am a user on login page", () => {
 
       const form = screen.getByTestId("form-admin");
 
-      // localStorage should be populated with form data
+      // Le localStorage devrait être rempli avec les données du formulaire
       Object.defineProperty(window, "localStorage", {
         value: {
           getItem: jest.fn(() => null),
@@ -190,7 +189,7 @@ describe("Given that I am a user on login page", () => {
         writable: true,
       });
 
-      // we have to mock navigation to test it
+      // On doit mocker la navigation pour pouvoir la tester
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
       };
@@ -224,7 +223,7 @@ describe("Given that I am a user on login page", () => {
       );
     });
 
-    test("It should renders HR dashboard page", () => {
+    test("Alors la page du tableau de bord RH doit être rendue", () => {
       expect(screen.queryByText("Validations")).toBeTruthy();
     });
   });
