@@ -6,16 +6,15 @@ import "@testing-library/jest-dom";
 import { screen, fireEvent, waitFor } from "@testing-library/dom";
 import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
-
 import mockStore from "../__mocks__/store";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import router from "../app/Router.js";
 import { ROUTES_PATH } from "../constants/routes";
 
 // Configuration de l'environnement de test
-const setupTestEnvironment = (userType = "Employee") => {
+const configurerEnvironnementTest = (typeUtilisateur = "Employee") => {
   Object.defineProperty(window, "localStorage", { value: localStorageMock });
-  window.localStorage.setItem("user", JSON.stringify({ type: userType }));
+  window.localStorage.setItem("user", JSON.stringify({ type: typeUtilisateur }));
 
   const root = document.createElement("div");
   root.setAttribute("id", "root");
@@ -24,16 +23,18 @@ const setupTestEnvironment = (userType = "Employee") => {
   window.onNavigate(ROUTES_PATH.NewBill);
 };
 
-// Configuration du conteneur NewBill`
-const setupNewBill = (store = null) => {
+// Configuration du conteneur NewBill
+const configurerNewBill = (store = null) => {
   return new NewBill({ document, onNavigate, store, localStorage });
 };
 
-describe("Employee Connected", () => {
-  beforeEach(() => setupTestEnvironment());
+describe("Utilisateur employé connecté", () => {
+  beforeEach(() => configurerEnvironnementTest());
 });
-describe("NewBill Page", async () => {
-  setupTestEnvironment();
+
+describe("Page Nouvelle Note de Frais", () => {
+  configurerEnvironnementTest();
+
   test("L'icône de mail est surlignée", async () => {
     const mailIcon = await screen.findByTestId("icon-mail");
     expect(mailIcon).toHaveClass("active-icon");
@@ -42,7 +43,7 @@ describe("NewBill Page", async () => {
   test("Le formulaire de nouvelle note de frais est correctement rendu", () => {
     document.body.innerHTML = NewBillUI();
 
-    const formFields = [
+    const champsFormulaire = [
       "expense-type",
       "expense-name",
       "datepicker",
@@ -53,22 +54,18 @@ describe("NewBill Page", async () => {
       "file",
     ];
 
-    formFields.forEach((field) => {
-      expect(screen.getByTestId(field)).toBeTruthy();
+    champsFormulaire.forEach((champ) => {
+      expect(screen.getByTestId(champ)).toBeTruthy();
     });
 
-    //expect(screen.getByTestId("form-new-bill")).toBeInTheDocument();
     expect(screen.getByText("Envoyer une note de frais")).toBeInTheDocument();
   });
 });
-describe("Given I am connected as an employee, When I upload a file", () => {
-  test("Then i upload the right format, the file should be send", () => {
-    // Créer une instance de NewBillUI et générer le code HTML pour l'interface utilisateur
-    const pageContent = NewBillUI();
-    // Remplacer le contenu de l'élément <body> par le code HTML généré
-    document.body.innerHTML = pageContent;
 
-    // Créer une nouvelle instance de NewBill avec des dépendances mock injectées
+describe("En tant qu'employé, quand je télécharge un fichier", () => {
+  test("Si je télécharge le bon format, le fichier doit être envoyé", () => {
+    document.body.innerHTML = NewBillUI();
+
     const newBillMock = new NewBill({
       document,
       onNavigate,
@@ -76,46 +73,39 @@ describe("Given I am connected as an employee, When I upload a file", () => {
       localStorage: localStorageMock,
     });
 
-    // Mettre en place un écouteur pour l'événement "change" sur l'élément <input type="file">
     const handleChangeFileTest = jest.fn((e) =>
       newBillMock.handleChangeFile(e)
     );
-    const files = screen.getByTestId("file");
-    const testFormat = new File(["it's a test"], "test.png", {
+    const fichier = screen.getByTestId("file");
+    const fichierTest = new File(["test"], "test.png", {
       type: "image/png",
     });
-    files.addEventListener("change", handleChangeFileTest);
-    // Simuler une sélection de fichier
-    fireEvent.change(files, { target: { files: [testFormat] } });
+    fichier.addEventListener("change", handleChangeFileTest);
 
-    // Vérifier que le fichier a été correctement attaché à l'élément <input> et que la fonction handleChangeFile a été appelée
+    fireEvent.change(fichier, { target: { files: [fichierTest] } });
+
     expect(handleChangeFileTest).toHaveBeenCalled();
-    expect(files.files[0]).toStrictEqual(testFormat);
+    expect(fichier.files[0]).toStrictEqual(fichierTest);
 
-    const formNewBill = screen.getByTestId("form-new-bill");
+    const formulaireNewBill = screen.getByTestId("form-new-bill");
 
-    // Vérifier que le formulaire existe
-    expect(formNewBill).toBeTruthy();
+    expect(formulaireNewBill).toBeTruthy();
 
-    // Mettre en place un écouteur pour l'événement "submit" sur le formulaire
     const handleSubmitTest = jest.fn((e) => newBillMock.handleSubmit(e));
-    formNewBill.addEventListener("submit", handleSubmitTest);
+    formulaireNewBill.addEventListener("submit", handleSubmitTest);
 
-    // On simule une soumission de formulaire
-    fireEvent.submit(formNewBill);
+    fireEvent.submit(formulaireNewBill);
 
-    // On verifie que la fonction handleSubmit a été appelée et que le texte attendu est affiché sur la page
     expect(handleSubmitTest).toHaveBeenCalled();
-    // expect(screen.getByText("Mes notes de frais")).toBeTruthy();
   });
 });
 
 describe("API POST", () => {
-  setupTestEnvironment();
+  configurerEnvironnementTest();
   test("Soumission d'une nouvelle note de frais via l'API mockée", async () => {
     const postSpy = jest.spyOn(mockStore, "bills");
 
-    const bill = {
+    const noteDeFrais = {
       id: "47qAXb6fIm2zOKkLzMro",
       vat: "80",
       fileUrl:
@@ -131,53 +121,51 @@ describe("API POST", () => {
       email: "a@a",
       pct: 20,
     };
-
-    //expect(postSpy).toHaveBeenCalledTimes(1);
   });
 });
+
 describe("Gestion des erreurs de l'API", () => {
   beforeEach(() => {
-    setupTestEnvironment();
-
+    configurerEnvironnementTest();
     document.body.innerHTML = NewBillUI();
   });
 
-  const testAPIError = async (errorCode) => {
-    const consoleErrorSpy = jest
+  const testerErreurAPI = async (codeErreur) => {
+    const espionConsoleErreur = jest
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
     const store = {
       bills: jest.fn(() => ({
-        update: jest.fn(() => Promise.reject(new Error(errorCode))),
+        update: jest.fn(() => Promise.reject(new Error(codeErreur))),
       })),
     };
 
-    const newBill = setupNewBill(store);
+    const newBill = configurerNewBill(store);
     newBill.isImgFormatValid = true;
 
-    const form = screen.getByTestId("form-new-bill");
+    const formulaire = screen.getByTestId("form-new-bill");
     const handleSubmit = jest.fn(newBill.handleSubmit);
 
-    form.addEventListener("submit", handleSubmit);
-    fireEvent.submit(form);
+    formulaire.addEventListener("submit", handleSubmit);
+    fireEvent.submit(formulaire);
 
     await waitFor(() =>
-      expect(consoleErrorSpy).toHaveBeenCalledWith(new Error(errorCode))
+      expect(espionConsoleErreur).toHaveBeenCalledWith(new Error(codeErreur))
     );
 
-    consoleErrorSpy.mockRestore();
+    espionConsoleErreur.mockRestore();
   };
 
   test("Erreur 400 lors de l'appel à l'API", async () => {
-    await testAPIError("400");
+    await testerErreurAPI("400");
   });
 
   test("Erreur 404 lors de l'appel à l'API", async () => {
-    await testAPIError("404");
+    await testerErreurAPI("404");
   });
 
   test("Erreur 500 lors de l'appel à l'API", async () => {
-    await testAPIError("500");
+    await testerErreurAPI("500");
   });
 });
