@@ -22,7 +22,7 @@ const row = (bill) => {
 const rows = (data) => {
   // Tri des notes de frais par date en ordre décroissant
   return data
-    ?.sort((a, b) => new Date(a.date) - new Date(b.date))
+    ?.sort((a, b) => new Date(b.copyDate) - new Date(a.copyDate))
     .map((bill) => row(bill))
     .join("");
 
