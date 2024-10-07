@@ -11,7 +11,7 @@ Clonez le projet backend dans le dossier bill-app :
 ```
 $ git clone https://github.com/OpenClassrooms-Student-Center/Billed-app-FR-Back.git
 ```
-
+8080
 ```
 bill-app/
    - Billed-app-FR-Back
@@ -56,7 +56,7 @@ Lancez l'application :
 $ live-server
 ```
 
-Puis allez à l'adresse : `http://127.0.0.1:8080/`
+Puis allez à l'adresse : `http://127.0.0.1:/`
 
 
 ## Comment lancer tous les tests en local avec Jest ?
